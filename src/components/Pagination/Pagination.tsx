@@ -7,11 +7,10 @@ import css from "./Pagination.module.css";
 type ModuleWithDefault<T> = { default: T };
 
 const getReactPaginate = (): ComponentType<ReactPaginateProps> => {
-  if (
-    ReactPaginateModule &&
-    typeof ReactPaginateModule === "object" &&
-    "default" in ReactPaginateModule
-  ) {
+  // Використовуємо подвійне приведення типів через unknown, як просить компілятор
+  const moduleObj = ReactPaginateModule as unknown as Record<string, unknown>;
+
+  if (moduleObj && typeof moduleObj === "object" && "default" in moduleObj) {
     return (
       ReactPaginateModule as unknown as ModuleWithDefault<
         ComponentType<ReactPaginateProps>
