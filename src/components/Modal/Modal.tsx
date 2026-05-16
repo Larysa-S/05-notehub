@@ -12,19 +12,26 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
 
+    // 1. Блокуємо прокручування сторінки, коли модалка відкрита
+    document.body.style.overflow = "hidden";
+
+    // Обробник натискання Escape
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === "Escape") onClose();
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    // 2. Очищення: повертаємо початкове прокручування сторінки при закритті або розмонтуванні
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  // Безпечна функція для кліку по бекдропу
   const handleBackdropClick = (e: MouseEvent<HTMLDivElement>): void => {
-    // Закриття модалки (якщо клікнули безпосередньо на Backdrop, а не на його вміст)
     if (e.target === e.currentTarget) {
       onClose();
     }
@@ -37,7 +44,7 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
       className={css.backdrop}
       role="dialog"
       aria-modal="true"
-      onClick={handleBackdropClick} // безпечний обробник
+      onClick={handleBackdropClick}
     >
       <div className={css.modal}>{children}</div>
     </div>,
