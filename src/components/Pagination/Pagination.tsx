@@ -1,7 +1,28 @@
-import ReactPaginate from "react-paginate";
+import type { ComponentType } from "react";
+import ReactPaginateModule from "react-paginate";
+import type { ReactPaginateProps } from "react-paginate";
 import css from "./Pagination.module.css";
 
-// Назва інтерфейсу відповідає схемі Ім’яКомпонентаProps за ТЗ
+// Універсальний boilerplate, який підтримує і Vite 8.x.x, і поточну збірку
+type ModuleWithDefault<T> = { default: T };
+
+const getReactPaginate = (): ComponentType<ReactPaginateProps> => {
+  if (
+    ReactPaginateModule &&
+    typeof ReactPaginateModule === "object" &&
+    "default" in ReactPaginateModule
+  ) {
+    return (
+      ReactPaginateModule as unknown as ModuleWithDefault<
+        ComponentType<ReactPaginateProps>
+      >
+    ).default;
+  }
+  return ReactPaginateModule as unknown as ComponentType<ReactPaginateProps>;
+};
+
+const ReactPaginate = getReactPaginate();
+
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -13,22 +34,21 @@ export default function Pagination({
   totalPages,
   onPageChange,
 }: PaginationProps) {
-  // Умова за ТЗ: рендериться лише якщо кількість сторінок більше 1
-  if (totalPages <= 1) {
+  // захист від невалідних даних (NaN, undefined, 0, null):
+  if (!totalPages || Number.isNaN(totalPages) || totalPages <= 1) {
     return null;
   }
 
-  // Обробник кліку на нову сторінку з типізацією параметра
   const handlePageClick = (selectedItem: { selected: number }): void => {
     onPageChange(selectedItem.selected + 1);
   };
 
   return (
     <ReactPaginate
-      forcePage={currentPage - 1} // Передаємо поточну сторінку (0-indexed)
+      forcePage={currentPage - 1}
       pageCount={totalPages}
       onPageChange={handlePageClick}
-      previousLabel="←" // Лаконічні стрілочки відповідно до стилів NoteHub
+      previousLabel="←"
       nextLabel="→"
       breakLabel="..."
       containerClassName={css.pagination}

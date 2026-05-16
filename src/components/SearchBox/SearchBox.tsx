@@ -8,7 +8,6 @@ interface SearchBoxProps {
 }
 
 export default function SearchBox({ value, onChange }: SearchBoxProps) {
-  // Всі події в колбеках компонентів мають бути типізовані за ТЗ
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
     onChange(e.target.value); // Дістаємо рядок і передаємо в App
   };

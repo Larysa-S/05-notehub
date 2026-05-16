@@ -1,17 +1,18 @@
-import { Formik, Form, Field, type FormikHelpers } from "formik";
+import { Formik, Form, Field, ErrorMessage, type FormikHelpers } from "formik";
 import * as Yup from "yup";
-import type { CreateNoteParams } from "../../services/noteService";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createNote } from "../../services/noteService";
+import type { NoteCategory } from "../../types/note";
 import css from "./NoteForm.module.css";
 
 interface NoteFormProps {
-  onSubmit: (note: CreateNoteParams) => void;
   onCancel: () => void;
 }
 
 interface FormValues {
   title: string;
   content: string;
-  tag: "Todo" | "Work" | "Personal" | "Meeting" | "Shopping";
+  tag: NoteCategory;
 }
 
 const NoteSchema = Yup.object().shape({
@@ -34,15 +35,26 @@ const initialValues: FormValues = {
   tag: "Todo",
 };
 
-export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
+export default function NoteForm({ onCancel }: NoteFormProps) {
+  const queryClient = useQueryClient();
+
+  // Хуки мутації та інвалідації викликаються прямо всередині компонента за ТЗ
+  const createMutation = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => {
+      onCancel();
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    },
+  });
+
   const handleSubmit = (
     values: FormValues,
     { resetForm }: FormikHelpers<FormValues>,
   ) => {
-    onSubmit({
+    createMutation.mutate({
       title: values.title,
       content: values.content,
-      tags: [values.tag],
+      tag: values.tag,
     });
     resetForm();
   };
@@ -53,29 +65,12 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
       validationSchema={NoteSchema}
       onSubmit={handleSubmit}
     >
-      {({ errors, touched, isSubmitting }) => (
+      {({ isSubmitting }) => (
         <Form className={css.form}>
           <div className={css.formGroup}>
             <label htmlFor="title">Title</label>
             <Field id="title" type="text" name="title" className={css.input} />
-            {/* Обходимо обмеження TypeScript для атрибута name через приведення типів */}
-            {touched.title && errors.title ? (
-              <span
-                className={css.error}
-                {...({
-                  name: "title",
-                } as React.HTMLAttributes<HTMLSpanElement> & { name: string })}
-              >
-                {String(errors.title)}
-              </span>
-            ) : (
-              <span
-                className={css.error}
-                {...({
-                  name: "title",
-                } as React.HTMLAttributes<HTMLSpanElement> & { name: string })}
-              />
-            )}
+            <ErrorMessage name="title" component="span" className={css.error} />
           </div>
 
           <div className={css.formGroup}>
@@ -87,23 +82,11 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
               rows={8}
               className={css.textarea}
             />
-            {touched.content && errors.content ? (
-              <span
-                className={css.error}
-                {...({
-                  name: "content",
-                } as React.HTMLAttributes<HTMLSpanElement> & { name: string })}
-              >
-                {String(errors.content)}
-              </span>
-            ) : (
-              <span
-                className={css.error}
-                {...({
-                  name: "content",
-                } as React.HTMLAttributes<HTMLSpanElement> & { name: string })}
-              />
-            )}
+            <ErrorMessage
+              name="content"
+              component="span"
+              className={css.error}
+            />
           </div>
 
           <div className={css.formGroup}>
@@ -115,23 +98,7 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
               <option value="Meeting">Meeting</option>
               <option value="Shopping">Shopping</option>
             </Field>
-            {touched.tag && errors.tag ? (
-              <span
-                className={css.error}
-                {...({
-                  name: "tag",
-                } as React.HTMLAttributes<HTMLSpanElement> & { name: string })}
-              >
-                {String(errors.tag)}
-              </span>
-            ) : (
-              <span
-                className={css.error}
-                {...({
-                  name: "tag",
-                } as React.HTMLAttributes<HTMLSpanElement> & { name: string })}
-              />
-            )}
+            <ErrorMessage name="tag" component="span" className={css.error} />
           </div>
 
           <div className={css.actions}>
@@ -145,9 +112,9 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
             <button
               type="submit"
               className={css.submitButton}
-              disabled={isSubmitting}
+              disabled={isSubmitting || createMutation.isPending}
             >
-              Create note
+              {createMutation.isPending ? "Creating..." : "Create note"}
             </button>
           </div>
         </Form>

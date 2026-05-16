@@ -2,7 +2,6 @@ import { type ReactNode, type MouseEvent, useEffect } from "react";
 import { createPortal } from "react-dom";
 import css from "./Modal.module.css";
 
-// Назва інтерфейсу пропсів за схемою Ім’яКомпонентаProps
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -13,7 +12,6 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;
 
-    // Всі події в колбеках компонентів мають бути типізовані
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === "Escape") onClose();
     };
@@ -26,7 +24,7 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
 
   // Безпечна функція для кліку по бекдропу
   const handleBackdropClick = (e: MouseEvent<HTMLDivElement>): void => {
-    // Закриваємо модалку тільки якщо клікнули безпосередньо на Backdrop, а не на його вміст
+    // Закриття модалки (якщо клікнули безпосередньо на Backdrop, а не на його вміст)
     if (e.target === e.currentTarget) {
       onClose();
     }
@@ -39,7 +37,7 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
       className={css.backdrop}
       role="dialog"
       aria-modal="true"
-      onClick={handleBackdropClick} // Використовуємо безпечний обробник
+      onClick={handleBackdropClick} // безпечний обробник
     >
       <div className={css.modal}>{children}</div>
     </div>,

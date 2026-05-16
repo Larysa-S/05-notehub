@@ -1,14 +1,15 @@
-export interface NoteTag {
-  id: string;
-  name: string;
-  color?: string;
-}
+export type NoteCategory =
+  | "Todo"
+  | "Work"
+  | "Personal"
+  | "Meeting"
+  | "Shopping";
 
 export interface Note {
   id: string;
   title: string;
   content: string;
-  tags?: NoteTag[] | string[] | unknown;
+  tag: NoteCategory; // Тільки одна властивість tag типу рядка/літерала
   createdAt: string;
   updatedAt: string;
 }
