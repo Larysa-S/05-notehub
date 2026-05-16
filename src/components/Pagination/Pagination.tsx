@@ -1,6 +1,7 @@
 import ReactPaginate from "react-paginate";
 import css from "./Pagination.module.css";
 
+// Назва інтерфейсу відповідає схемі Ім’яКомпонентаProps за ТЗ
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -12,8 +13,13 @@ export default function Pagination({
   totalPages,
   onPageChange,
 }: PaginationProps) {
-  // Обробник кліку на нову сторінку
-  const handlePageClick = (selectedItem: { selected: number }) => {
+  // Умова за ТЗ: рендериться лише якщо кількість сторінок більше 1
+  if (totalPages <= 1) {
+    return null;
+  }
+
+  // Обробник кліку на нову сторінку з типізацією параметра
+  const handlePageClick = (selectedItem: { selected: number }): void => {
     onPageChange(selectedItem.selected + 1);
   };
 
@@ -22,8 +28,8 @@ export default function Pagination({
       forcePage={currentPage - 1} // Передаємо поточну сторінку (0-indexed)
       pageCount={totalPages}
       onPageChange={handlePageClick}
-      previousLabel="← Назад"
-      nextLabel="Вперед →"
+      previousLabel="←" // Лаконічні стрілочки відповідно до стилів NoteHub
+      nextLabel="→"
       breakLabel="..."
       containerClassName={css.pagination}
       activeClassName={css.active}

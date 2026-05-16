@@ -1,21 +1,19 @@
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { Formik, Form, Field, type FormikHelpers } from "formik";
 import * as Yup from "yup";
-import type { CreateNoteParams } from "../../types/note";
+import type { CreateNoteParams } from "../../services/noteService";
 import css from "./NoteForm.module.css";
 
 interface NoteFormProps {
-  onSubmit: (note: CreateNoteParams) => Promise<void>;
+  onSubmit: (note: CreateNoteParams) => void;
   onCancel: () => void;
 }
 
-// Інтерфейс для внутрішнього стану форми Formik
 interface FormValues {
   title: string;
   content: string;
   tag: "Todo" | "Work" | "Personal" | "Meeting" | "Shopping";
 }
 
-// Схема валідації Yup відповідно до ТЗ
 const NoteSchema = Yup.object().shape({
   title: Yup.string()
     .min(3, "Мінімум 3 символи")
@@ -37,15 +35,13 @@ const initialValues: FormValues = {
 };
 
 export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
-  const handleSubmit = async (
+  const handleSubmit = (
     values: FormValues,
-    { resetForm }: { resetForm: () => void },
+    { resetForm }: FormikHelpers<FormValues>,
   ) => {
-    // Трансформуємо 'content' у 'text' для відповідності DTO бекенда
-    await onSubmit({
+    onSubmit({
       title: values.title,
-      text: values.content,
-      // Бекенд очікує масив рядків для тегів, загортаємо обраний тег в масив
+      content: values.content,
       tags: [values.tag],
     });
     resetForm();
@@ -57,12 +53,29 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
       validationSchema={NoteSchema}
       onSubmit={handleSubmit}
     >
-      {({ isSubmitting }) => (
+      {({ errors, touched, isSubmitting }) => (
         <Form className={css.form}>
           <div className={css.formGroup}>
             <label htmlFor="title">Title</label>
             <Field id="title" type="text" name="title" className={css.input} />
-            <ErrorMessage name="title" component="span" className={css.error} />
+            {/* Обходимо обмеження TypeScript для атрибута name через приведення типів */}
+            {touched.title && errors.title ? (
+              <span
+                className={css.error}
+                {...({
+                  name: "title",
+                } as React.HTMLAttributes<HTMLSpanElement> & { name: string })}
+              >
+                {String(errors.title)}
+              </span>
+            ) : (
+              <span
+                className={css.error}
+                {...({
+                  name: "title",
+                } as React.HTMLAttributes<HTMLSpanElement> & { name: string })}
+              />
+            )}
           </div>
 
           <div className={css.formGroup}>
@@ -74,11 +87,23 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
               rows={8}
               className={css.textarea}
             />
-            <ErrorMessage
-              name="content"
-              component="span"
-              className={css.error}
-            />
+            {touched.content && errors.content ? (
+              <span
+                className={css.error}
+                {...({
+                  name: "content",
+                } as React.HTMLAttributes<HTMLSpanElement> & { name: string })}
+              >
+                {String(errors.content)}
+              </span>
+            ) : (
+              <span
+                className={css.error}
+                {...({
+                  name: "content",
+                } as React.HTMLAttributes<HTMLSpanElement> & { name: string })}
+              />
+            )}
           </div>
 
           <div className={css.formGroup}>
@@ -90,7 +115,23 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
               <option value="Meeting">Meeting</option>
               <option value="Shopping">Shopping</option>
             </Field>
-            <ErrorMessage name="tag" component="span" className={css.error} />
+            {touched.tag && errors.tag ? (
+              <span
+                className={css.error}
+                {...({
+                  name: "tag",
+                } as React.HTMLAttributes<HTMLSpanElement> & { name: string })}
+              >
+                {String(errors.tag)}
+              </span>
+            ) : (
+              <span
+                className={css.error}
+                {...({
+                  name: "tag",
+                } as React.HTMLAttributes<HTMLSpanElement> & { name: string })}
+              />
+            )}
           </div>
 
           <div className={css.actions}>
@@ -106,7 +147,7 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
               className={css.submitButton}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Creating..." : "Create note"}
+              Create note
             </button>
           </div>
         </Form>
